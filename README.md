@@ -150,7 +150,7 @@ namespace Mod
     {
         private void Start()
         {
-            POKManager.RegisterMod(new TemplateMod(), MOD_NAME, MOD_VERSION, MOD_DESCRIPTION, "TestInt", "TestFloat", "TestBool");
+            POKManager.RegisterMod(new TemplateMod(), MOD_NAME, MOD_VERSION, MOD_DESCRIPTION, "TestInt", "TestFloat", "TestBool", "TestButton");
         }
     }
 }
