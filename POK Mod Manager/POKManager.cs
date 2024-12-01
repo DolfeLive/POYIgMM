@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using BepInEx;
 using BepInEx.Logging;
 using System.Collections.Generic;
@@ -85,6 +85,15 @@ namespace POKModManager
         {
             if (FindObjectOfType<POKManager>() != null)
             {
+                //PropertyInfo[] info = Mod.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                //if (info.Length != 0)
+                //{
+                //    foreach (PropertyInfo property in info)
+                //    {
+
+                //    }
+                //}
+
                 if (properties.Length != 0)
                 {
                     foreach (string property in properties)
@@ -138,6 +147,9 @@ namespace POKModManager
                                 {
                                     info.SetValue(Mod, (PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}") == 1 ? true : false));
                                 }
+                                break;
+                            case nameof(UnityEvent):
+                                
                                 break;
                             default:
                                 throw new ArgumentException($"Cannot have type {propertyType.Name}");
@@ -576,6 +588,50 @@ namespace POKModManager
             }
         }
 
+        static void GenerateModButton(string Name, int i, UnityAction action = null)
+        {
+            Transform configHolder = configMenu.transform.Find("holder");
+            Transform Target = new GameObject($"Button {Name}").transform;
+            Target.transform.parent = configHolder.transform;
+
+            GetRowAndColumn(i, out int row, out int column);
+            Target.transform.localPosition = new Vector3(-710 + 325 * row, (300 - 134 * column) - 350, 0);
+            Target.transform.localScale = new Vector3(0.7f, 0.7f, 1);
+
+            GameObject background = new GameObject("Background");
+            background.transform.SetParent(Target, false);
+
+            Image backgroundImage = background.AddComponent<Image>();
+            backgroundImage.color = Color.gray;
+
+            RectTransform backgroundRectTransform = background.GetComponent<RectTransform>();
+            backgroundRectTransform.sizeDelta = new Vector2(300, 50);
+
+            GameObject textObject = new GameObject("Button Text");
+            textObject.transform.SetParent(background.transform, false);
+
+            Text textComponent = textObject.AddComponent<Text>();
+            textComponent.text = Name;
+            textComponent.color = Color.white;
+            textComponent.fontSize = 30;
+            textComponent.font = peaksOfYoreFont;
+            textComponent.horizontalOverflow = HorizontalWrapMode.Overflow;
+            textComponent.raycastTarget = true;
+            textComponent.alignment = TextAnchor.MiddleCenter;
+
+            // Use Unity's UI Button component correctly
+            UnityEngine.UI.Button buttonComponent = background.AddComponent<UnityEngine.UI.Button>();
+
+            // Set the button's graphic to the background image
+            buttonComponent.targetGraphic = backgroundImage;
+
+            // Add the action to the button's click event
+            if (action != null)
+            {
+                buttonComponent.onClick.AddListener(action);
+            }
+        }
+
         static void SetupConfig(int i)
         {
             Mod Mod = mods[i];
@@ -620,7 +676,27 @@ namespace POKModManager
                             info.SetValue(Mod.ModClass, v); 
                         });
                         break;
+                    case nameof(UnityEvent):
+                        GenerateModButton(propertyName, x, () => {
+                            try
+                            {
+                                var eventValue = info.GetValue(Mod.ModClass);
 
+                                if (eventValue is UnityEvent unityEvent)
+                                {
+                                    unityEvent.Invoke();
+                                }
+                                else
+                                {
+                                    Debug.LogWarning($"Property {propertyName} is not a UnityEvent");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.LogError($"Error invoking UnityEvent {propertyName}: {ex.Message}");
+                            }
+                        });
+                        break;
                 }
             }
         }
