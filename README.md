@@ -97,7 +97,7 @@ and then mod properties (param string[])
 
 the description can only go up to 103 characters,
 
-only four data types are currently supported with mod properties - Ints, floats, booleans and UnityEvents.
+only four data types are currently supported with mod properties - Ints, floats, booleans, strings and UnityEvents.
 
 ```cs
 using POKModManager;
@@ -109,6 +109,7 @@ namespace Mod
             [POKRange(0, 10)] public int TestInt { get; set; }
             [POKRange(0, 10)] public float TestFloat { get; set; }
             public bool TestBool { get; set; }
+            public string TestString { get; set; } = "hello :D";
             public UnityEvent TestButton { get; set; } = new UnityEvent();
 
             // Example button use case
@@ -120,7 +121,6 @@ namespace Mod
             void OnButton()
             {
                 Debug.Log("Button pressed!");
-            
             }
     }
 }
@@ -143,7 +143,7 @@ namespace Mod
     {
         private void Start()
         {
-            POKManager.RegisterMod(new TemplateMod(), MOD_NAME, MOD_VERSION, MOD_DESCRIPTION, "TestInt", "TestFloat", "TestBool", "TestButton");
+            POKManager.RegisterMod(new TemplateMod(), MOD_NAME, MOD_VERSION, MOD_DESCRIPTION, "TestInt", "TestFloat", "TestBool", "TestButton", "TestString");
         }
     }
 }
