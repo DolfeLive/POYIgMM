@@ -36,7 +36,6 @@
     <Compile Include="MonoBehaviourReference.cs" />
     <Compile Include="POKManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestMod.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
