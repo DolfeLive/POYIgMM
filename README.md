@@ -11,7 +11,7 @@ Poky is still in development so expect bugs.
 
 # Documentation
 
-Template for poky mods is available here. [![resource](resource)](https://github.com/DolfeLive/Poky-Mod-Manager/blob/main/POK%20Mod%20Manager/TestMod.cs)
+Template for poky mods is available here. [![resource](resource)](https://github.com/DolfeLive/Poky-Mod-Manager/blob/main/POK%20Mod%20Manager/Example.cs)
 
 If you need help setting up bepinex look at this [![resource](resource)](https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/1_setup.html).
 
