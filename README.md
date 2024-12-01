@@ -1,8 +1,8 @@
 # FORKED FROM https://github.com/KinexDev/Poky-Mod-Manager
-# Peaks of Yore In game mod manager
-POYIgMM Mod Manager is a simple mod manager for peaks of yore made in bepinex, it allows enabling, disabling and configurating mods easily.
+# Poky Mod Manager
+Poky is a simple mod manager for peaks of yore made in bepinex, it allows enabling, disabling and configurating mods easily.
 
-POYIgMM is still in development so expect bugs.
+Poky is still in development so expect bugs.
 
 ![](https://github.com/KinexDev/Poky-Mod-Manager/blob/main/POKManager.gif)
 
