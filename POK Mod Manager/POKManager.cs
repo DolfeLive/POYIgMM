@@ -619,10 +619,8 @@ namespace POKModManager
             textComponent.raycastTarget = true;
             textComponent.alignment = TextAnchor.MiddleCenter;
 
-            // Use Unity's UI Button component correctly
             UnityEngine.UI.Button buttonComponent = background.AddComponent<UnityEngine.UI.Button>();
 
-            // Set the button's graphic to the background image
             buttonComponent.targetGraphic = backgroundImage;
 
             // Add the action to the button's click event
