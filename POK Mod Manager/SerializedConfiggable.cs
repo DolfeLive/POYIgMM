@@ -6,15 +6,11 @@ namespace POKModManager
     [Serializable]
     public class SerializedConfiggable
     {
-
         [JsonProperty]
         public string key { get; }
 
         [JsonProperty]
-        private string value;
-
-        [JsonIgnore]
-        private object obj;
+        private object value;
 
         [JsonIgnore]
         private Type type;
@@ -25,39 +21,38 @@ namespace POKModManager
             SetValue(value);
         }
 
-        [JsonConstructor]
-        protected SerializedConfiggable(string key, string jsonValue)
-        {
-            this.key = key;
-            this.value = jsonValue;
-        }
 
         public string GetSerialized()
         {
-            return value;
+            return JsonConvert.SerializeObject(value, Formatting.Indented);
         }
 
         public T GetValue<T>()
         {
-            return JsonConvert.DeserializeObject<T>(value);
+            if (value == null)
+                return default;
+
+            if (typeof(T) == typeof(int))
+                return (T)(object)Convert.ToInt32(value);
+            if (typeof(T) == typeof(float))
+                return (T)(object)Convert.ToSingle(value);
+            if (typeof(T) == typeof(bool))
+                return (T)(object)Convert.ToBoolean(value);
+            if (typeof(T) == typeof(string))
+                return (T)(object)value.ToString();
+
+            return (T)value;
         }
 
         public void SetValue(object value)
         {
-            this.obj = value;
+            this.value = value;
             this.type = value.GetType();
-            this.value = JsonConvert.SerializeObject(value, type: type, formatting: Formatting.Indented, null);
         }
 
         public bool IsValid()
         {
-            if (string.IsNullOrEmpty(value))
-                return false;
-
-            if (string.IsNullOrEmpty(key))
-                return false;
-
-            return true;
+            return value != null && !string.IsNullOrEmpty(key);
         }
     }
 }
