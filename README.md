@@ -93,8 +93,6 @@ mod version (string),
 
 mod description (string), 
 
-and then mod properties (param string[])
-
 the description can only go up to 103 characters,
 
 The currently supported data types: - Ints, floats, booleans, strings, UnityEvents and Dropdowns.
