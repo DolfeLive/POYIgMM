@@ -13,74 +13,9 @@ using POKModManager;
 namespace POKModManager
 {
     /// <summary>
-    /// Mod class to get properties from
-    /// </summary>
-    public struct Mod
-    {
-        public ModClass ModClass;
-        public string Name;
-        public string Version;
-        public string Description;
-        public string[] Properties;
-        public Mod(ModClass mod, string name, string version, string description, string[] properties)
-        {
-            ModClass = mod;
-            Name = name;
-            Version = version;
-            Description = description;
-            Properties = properties;
-        }
-    }
-    /// <summary>
-    /// Used for getting range of sliders
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public class POKRange : Attribute
-    {
-        public int min;
-
-        public int max;
-
-        public POKRange(int Max)
-        {
-            min = 0;
-            max = Max;
-        }
-
-        public POKRange(int Min, int Max)
-        {
-            min = Min;
-            max = Max;
-        }
-    }
-
-    /// <summary>
-    /// Do not save modified values
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public class DoNotSave : Attribute
-    {
-    }
-
-    /// <summary>
-    /// If you plan on having public values but dont want to have them all configable
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public class Editable : Attribute
-    {
-    }
-
-    public class POKDropdown : List<string>
-    {
-        public List<string> Properties { get; set; } = new List<string>();
-        public int SelectedIndex { get; set; } = 0; // Default to the first index
-
-    }
-
-    /// <summary>
     /// Basic mod manager for enabling and disabling mods.
     /// </summary>
-    [BepInPlugin("Data.POKManager", "POK Manager", "1.0.0")]
+    [BepInPlugin("Data.POKManager", "POK Manager", "1.0.1")]
     public class POKManager : BaseUnityPlugin
     {
         public static POKManager instance;
@@ -105,7 +40,7 @@ namespace POKModManager
             typeof(POKDropdown)
         };
 
-        public static void propTypeReplacement(PropertyInfo info, Type propertyType, POKRange attribute, ModClass modClass, string property)
+        public static void propTypeReplacement(ref PropertyInfo info, ref Type propertyType, ref POKRange attribute, ref ModClass modClass, ref string property)
         {
             if (propertyType == typeof(int))
             {
@@ -175,13 +110,40 @@ namespace POKModManager
                     info.SetValue(modClass, PlayerPrefs.GetString($"{modClass.GetType().Name}_{property}"));
                 }
             }
-            else if (propertyType == typeof(UnityEvent)) {}
-            else
+            else if (propertyType == typeof(UnityEvent)) { }
+            else if (propertyType == typeof(Dropdown))
             {
-                throw new ArgumentException($"Cannot handle type {propertyType.Name}");
+                var dropdown = (POKDropdown)info.GetValue(modClass);
+
+                if (dropdown != null)
+                {
+                    var selectedIndexToSave = dropdown.SelectedIndex;
+
+                    if (!PlayerPrefs.HasKey($"{modClass.GetType().Name}_{property}") && !Persistance.HasKey(modClass.GetType().Name, property))
+                    {
+                        Persistance.SaveData(modClass.GetType().Name, property, selectedIndexToSave);
+                    }
+                    else if (Persistance.HasKey(modClass.GetType().Name, property) && !PlayerPrefs.HasKey($"{modClass.GetType().Name}_{property}"))
+                    {
+                        var savedIndex = Persistance.GetValue<int>(modClass.GetType().Name, property);
+                        dropdown.SelectedIndex = savedIndex;
+                        info.SetValue(modClass, dropdown);
+                    }
+                    else
+                    {
+                        var savedIndex = PlayerPrefs.GetInt($"{modClass.GetType().Name}_{property}", 0);
+                        dropdown.SelectedIndex = savedIndex;
+                        info.SetValue(modClass, dropdown);
+
+                        Persistance.SaveData(modClass.GetType().Name, property, savedIndex);
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException($"Cannot handle type {propertyType.Name}");
+                }
             }
         }
-
 
         /// <summary>
         /// Register a mod to the manager
@@ -192,124 +154,22 @@ namespace POKModManager
             {
                 PropertyInfo[] Properties = Mod.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-                foreach (PropertyInfo info in Properties)
+                for (int i = 0; i < Properties.Length; i++)
                 {
-                    if (info == null)
+                    if (Properties[i] == null)
                     {
                         throw new NullReferenceException("Mod property doesn't exist!");
                     }
+                    PropertyInfo info = Properties[i];
                     string property = info.Name;
 
                     POKRange attribute = info.GetCustomAttribute(typeof(POKRange)) as POKRange;
 
                     Type propertyType = info.PropertyType;
-                    
-                    //propTypeReplacement(info, propertyType, attribute, Mod, property);
 
-                    switch (propertyType)
-                    {
-                        case Type _ when propertyType == typeof(Int32):
-                            if (attribute == null) throw new ArgumentException("Ints are required the attribute POKRange");
-
-                            if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                            }
-                            else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            {
-                                info.SetValue(Mod, Persistance.GetValue<int>(Mod.GetType().Name, property));
-                            }
-                            else
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                                info.SetValue(Mod, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                            }
-                            break;
-                        case Type _ when propertyType == typeof(Single):
-                            if (attribute == null) throw new ArgumentException("Floats are required the attribute POKRange");
-
-                            if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                            }
-                            else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            {
-                                info.SetValue(Mod, Persistance.GetValue<float>(Mod.GetType().Name, property));
-                            }
-                            else
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetFloat($"{Mod.GetType().Name}_{property}"));
-                                info.SetValue(Mod, PlayerPrefs.GetFloat($"{Mod.GetType().Name}_{property}"));
-                            }
-
-                            break;
-                        case Type _ when propertyType == typeof(Boolean):
-                            if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, ((bool)info.GetValue(Mod) == true ? 1 : 0));
-
-                            }
-                            else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            {
-                                info.SetValue(Mod, (Persistance.GetValue<int>(Mod.GetType().Name, property) == 1 ? true : false));
-                            }
-                            else
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                                info.SetValue(Mod, (PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}") == 1 ? true : false));
-                            }
-                            break;
-                        case Type _ when propertyType == typeof(UnityEvent):
-                            break;
-                        case Type _ when propertyType == typeof(string):
-                            if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                            }
-                            else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            {
-                                info.SetValue(Mod, Persistance.GetValue<string>(Mod.GetType().Name, property));
-                            }
-                            else
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetString($"{Mod.GetType().Name}_{property}"));
-                                info.SetValue(Mod, PlayerPrefs.GetString($"{Mod.GetType().Name}_{property}"));
-                            }
-                            break;
-                        case Type _ when propertyType == typeof(POKDropdown):
-                            var dropdown = (POKDropdown)info.GetValue(Mod);
-
-                            if (dropdown != null)
-                            {
-                                var selectedIndexToSave = dropdown.SelectedIndex;
-
-                                if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, selectedIndexToSave);
-                                }
-                                else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                                {
-                                    var savedIndex = Persistance.GetValue<int>(Mod.GetType().Name, property);
-                                    dropdown.SelectedIndex = savedIndex;
-                                    info.SetValue(Mod, dropdown);
-                                }
-                                else
-                                {
-                                    var savedIndex = PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}", 0);
-                                    dropdown.SelectedIndex = savedIndex;
-                                    info.SetValue(Mod, dropdown);
-
-                                    Persistance.SaveData(Mod.GetType().Name, property, savedIndex);
-                                }
-                            }
-                            break;
-                        default:
-                            throw new ArgumentException($"Cannot have type {propertyType.Name}");
-                    }
+                    propTypeReplacement(ref info, ref propertyType, ref attribute, ref Mod, ref property);
                 }
+                
                 string[] propertyNames = Properties.Select(prop => prop.Name).ToArray();
 
                 Mod mod = new Mod(Mod, ModName, Version, Description, propertyNames);
@@ -397,128 +257,22 @@ namespace POKModManager
                 Properties = Properties.Where(p => p.GetCustomAttribute(typeof(Editable)) != null).ToArray();
 
 
-                foreach (PropertyInfo info in Properties)
+                for (int i = 0; i < Properties.Length; i++)
                 {
-                    if (info == null)
+                    if (Properties[i] == null)
                     {
                         throw new NullReferenceException("Mod property doesn't exist!");
                     }
+                    PropertyInfo info = Properties[i];
                     string property = info.Name;
 
                     POKRange attribute = info.GetCustomAttribute(typeof(POKRange)) as POKRange;
 
                     Type propertyType = info.PropertyType;
 
-                    switch (propertyType)
-                    {
-                        case Type _ when propertyType == typeof(Int32):
-                            if (attribute == null) throw new ArgumentException("Ints are required the attribute POKRange");
-
-                            //PlayerPrefs.SetInt($"{Mod.GetType().Name}_{property}", (int)info.GetValue(Mod));
-                            if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                            }
-                            else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            {
-                                info.SetValue(Mod, Persistance.GetValue<int>(Mod.GetType().Name, property));
-                            }
-                            else
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                                info.SetValue(Mod, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                            }
-                            break;
-                        case Type _ when propertyType == typeof(Single):
-                            if (attribute == null) throw new ArgumentException("Floats are required the attribute POKRange");
-
-                            //if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            //{
-                            //    PlayerPrefs.SetFloat($"{Mod.GetType().Name}_{property}", (float)info.GetValue(Mod));
-                            //}
-                            //else
-                            //{
-                            //    info.SetValue(Mod, PlayerPrefs.GetFloat($"{Mod.GetType().Name}_{property}"));
-                            //}
-
-                            if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                            }
-                            else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            {
-                                info.SetValue(Mod, Persistance.GetValue<float>(Mod.GetType().Name, property));
-                            }
-                            else
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetFloat($"{Mod.GetType().Name}_{property}"));
-                                info.SetValue(Mod, PlayerPrefs.GetFloat($"{Mod.GetType().Name}_{property}"));
-                            }
-
-                            break;
-                        case Type _ when propertyType == typeof(Boolean):
-
-
-                            //if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            //{
-                            //    PlayerPrefs.SetInt($"{Mod.GetType().Name}_{property}", ((bool)info.GetValue(Mod) == true ? 1 : 0));
-                            //}
-                            //else
-                            //{
-                            //    info.SetValue(Mod, (PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}") == 1 ? true : false));
-                            //}
-
-                            if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                            }
-                            else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            {
-                                info.SetValue(Mod, (Persistance.GetValue<int>(Mod.GetType().Name, property) == 1 ? true : false));
-                            }
-                            else
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                                info.SetValue(Mod, (PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}") == 1 ? true : false));
-                            }
-
-                            break;
-                        case Type _ when propertyType == typeof(UnityEvent):
-                            break;
-                        case Type _ when propertyType == typeof(string):
-
-                            //if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            //{
-                            //    PlayerPrefs.SetString($"{Mod.GetType().Name}_{property}", (string)info.GetValue(Mod));
-                            //}
-                            //else
-                            //{
-                            //    info.SetValue(Mod, PlayerPrefs.GetString($"{Mod.GetType().Name}_{property}"));
-                            //}
-
-                            if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                            }
-                            else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                            {
-                                info.SetValue(Mod, Persistance.GetValue<string>(Mod.GetType().Name, property));
-                            }
-                            else
-                            {
-                                Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetString($"{Mod.GetType().Name}_{property}"));
-                                info.SetValue(Mod, PlayerPrefs.GetString($"{Mod.GetType().Name}_{property}"));
-                            }
-
-                            break;
-                        default:
-                            throw new ArgumentException($"Cannot have type {propertyType.Name}");
-                    }
+                    propTypeReplacement(ref info, ref propertyType, ref attribute, ref Mod, ref property);
                 }
+
                 string[] propertyNames = Properties.Select(prop => prop.Name).ToArray();
 
                 Mod mod = new Mod(Mod, ModName, Version, Description, propertyNames);
@@ -582,133 +336,21 @@ namespace POKModManager
             {
                 if (properties.Length != 0)
                 {
-                    foreach (string property in properties)
+                    for (int i = 0; i < properties.Length; i++)
                     {
-                        PropertyInfo info = Mod.GetType().GetProperty(property, BindingFlags.Public | BindingFlags.Instance);
+                        PropertyInfo info = Mod.GetType().GetProperty(properties[i], BindingFlags.Public | BindingFlags.Instance);
 
-                        if (info == null)
+                        if (properties[i] == null)
                         {
                             throw new NullReferenceException("Mod property doesn't exist!");
                         }
-
-                        if (properties.ToList().FindAll(x => x == property).Count >= 2)
-                        {
-                            throw new ArgumentException("Mod property cannot be registered more than twice!");
-                        }
+                        string property = info.Name;
 
                         POKRange attribute = info.GetCustomAttribute(typeof(POKRange)) as POKRange;
 
                         Type propertyType = info.PropertyType;
 
-                        switch (propertyType)
-                        {
-                            case Type _ when propertyType == typeof(Int32):
-                                if (attribute == null) throw new ArgumentException("Ints are required the attribute POKRange");
-
-                                //PlayerPrefs.SetInt($"{Mod.GetType().Name}_{property}", (int)info.GetValue(Mod));
-                                if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                                }
-                                else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                                {
-                                    info.SetValue(Mod, Persistance.GetValue<int>(Mod.GetType().Name, property));
-                                }
-                                else
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                                    info.SetValue(Mod, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                                }
-                                break;
-                            case Type _ when propertyType == typeof(Single):
-                                if (attribute == null) throw new ArgumentException("Floats are required the attribute POKRange");
-
-                                //if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                                //{
-                                //    PlayerPrefs.SetFloat($"{Mod.GetType().Name}_{property}", (float)info.GetValue(Mod));
-                                //}
-                                //else
-                                //{
-                                //    info.SetValue(Mod, PlayerPrefs.GetFloat($"{Mod.GetType().Name}_{property}"));
-                                //}
-
-                                if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                                }
-                                else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                                {
-                                    info.SetValue(Mod, Persistance.GetValue<float>(Mod.GetType().Name, property));
-                                }
-                                else
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetFloat($"{Mod.GetType().Name}_{property}"));
-                                    info.SetValue(Mod, PlayerPrefs.GetFloat($"{Mod.GetType().Name}_{property}"));
-                                }
-
-                                break;
-                            case Type _ when propertyType == typeof(Boolean):
-
-
-                                //if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                                //{
-                                //    PlayerPrefs.SetInt($"{Mod.GetType().Name}_{property}", ((bool)info.GetValue(Mod) == true ? 1 : 0));
-                                //}
-                                //else
-                                //{
-                                //    info.SetValue(Mod, (PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}") == 1 ? true : false));
-                                //}
-
-                                if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                                }
-                                else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                                {
-                                    info.SetValue(Mod, (Persistance.GetValue<int>(Mod.GetType().Name, property) == 1 ? true : false));
-                                }
-                                else
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}"));
-                                    info.SetValue(Mod, (PlayerPrefs.GetInt($"{Mod.GetType().Name}_{property}") == 1 ? true : false));
-                                }
-
-                                break;
-                            case Type _ when propertyType == typeof(UnityEvent):
-                                break;
-                            case Type _ when propertyType == typeof(string):
-
-                                //if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                                //{
-                                //    PlayerPrefs.SetString($"{Mod.GetType().Name}_{property}", (string)info.GetValue(Mod));
-                                //}
-                                //else
-                                //{
-                                //    info.SetValue(Mod, PlayerPrefs.GetString($"{Mod.GetType().Name}_{property}"));
-                                //}
-
-                                if (!PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}") && !Persistance.HasKey(Mod.GetType().Name, property))
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, info.GetValue(Mod));
-
-                                }
-                                else if (Persistance.HasKey(Mod.GetType().Name, property) && !PlayerPrefs.HasKey($"{Mod.GetType().Name}_{property}"))
-                                {
-                                    info.SetValue(Mod, Persistance.GetValue<string>(Mod.GetType().Name, property));
-                                }
-                                else
-                                {
-                                    Persistance.SaveData(Mod.GetType().Name, property, PlayerPrefs.GetString($"{Mod.GetType().Name}_{property}"));
-                                    info.SetValue(Mod, PlayerPrefs.GetString($"{Mod.GetType().Name}_{property}"));
-                                }
-
-                                break;
-                            default:
-                                throw new ArgumentException($"Cannot have type {propertyType.Name}");
-                        }
+                        propTypeReplacement(ref info, ref propertyType, ref attribute, ref Mod, ref property);
                     }
                 }
 
@@ -1262,13 +904,11 @@ namespace POKModManager
             Target.transform.parent = configHolder.transform;
 
             GetRowAndColumn(i, out int row, out int column);
-            print($"Row: {row}, column: {column}");
             Target.transform.localPosition = new Vector3(-735 + 435 * row, (-100 - (134 * column)), 0);
             Target.transform.localScale = new Vector3(1.2f, 1.2f, 1);
 
             GameObject dropdownObject = Instantiate(AssetBundleLoader.dropdown);
             dropdownObject.transform.SetParent(Target, false);
-            //dropdownObject.transform.position = Vector3.zero;
 
             GameObject textObject = new GameObject("Dropdown name");
             textObject.transform.SetParent(dropdownObject.transform, false);
