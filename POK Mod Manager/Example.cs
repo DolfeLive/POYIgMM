@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using POKModManager;
+
 using UnityEngine.Events;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 namespace TestMod
 {
@@ -15,7 +17,7 @@ namespace TestMod
     {
         void Start()
         {
-            POKManager.RegisterMod(new actualtestMod(), "test", "test", "test", "TestInt", "TestFloat", "TestBool", "TestButton");
+            POKManager.RegisterMod(new actualtestMod(), "test", "test", "test");//, "TestInt", "TestFloat", "TestBool", "TestButton", "TestString");
         }
     }
 
@@ -23,9 +25,11 @@ namespace TestMod
     {
         [POKRange(0, 10)] public int TestInt { get; set; }
         [POKRange(0, 10)] public float TestFloat { get; set; }
-        public bool TestBool { get; set; }
-
+        [Editable] public bool TestBool { get; set; }
+        public string TestString { get; set; } = "hello :D";
         public UnityEvent TestButton { get; set; } = new UnityEvent();
+
+        public POKDropdown dropdown { get; set; } = new POKDropdown { Properties = new List<string> { "val1", "val2", "val3", "val4", "val5" } };
 
         public override void Start()
         {
@@ -35,7 +39,7 @@ namespace TestMod
         void OnButton()
         {
             Debug.Log("Button pressed! ");
-
         }
+
     }
 }
