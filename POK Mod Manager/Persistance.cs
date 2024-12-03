@@ -20,7 +20,6 @@ namespace POKModManager
             string folderPath = Path.Combine(Paths.DataFolder, modName);
             string filePath = Path.Combine(folderPath, $"{modName}.json");
 
-            // Return false if the directory or file doesn't exist
             if (!Directory.Exists(folderPath) || !File.Exists(filePath))
                 return false;
 
@@ -28,7 +27,6 @@ namespace POKModManager
 
             try
             {
-                // Load and deserialize data
                 string json = File.ReadAllText(filePath);
                 loadedData = Newtonsoft.Json.JsonConvert.DeserializeObject<List<SerializedConfiggable>>(json)
                              ?? new List<SerializedConfiggable>();
