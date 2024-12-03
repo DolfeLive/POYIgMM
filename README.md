@@ -131,6 +131,8 @@ Ints and floats are required to have the attribute "POKRange", it has 2 paramete
 
 There is also another attribute called "DoNotSave", this will not save the modified values.
 
+As well as "Editable" (Explained later on)
+
 There are 3 ways to register the mod, the legacy way, automatic and Explicit
 ```cs
 using BepInEx;
