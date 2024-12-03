@@ -839,12 +839,10 @@ namespace POKModManager
             Transform Target = new GameObject($"Input {Name}").transform;
             Target.transform.parent = configHolder.transform;
 
-            // Position the input field similar to the slider
             GetRowAndColumn(i, out int row, out int column);
             Target.transform.localPosition = new Vector3(-675 + 325 * row, (300 - 134 * column) - 393, 0);
             Target.transform.localScale = new Vector3(0.7f, 0.7f, 1);
 
-            // Create name text
             GameObject nameObject = new GameObject("Name");
             nameObject.transform.SetParent(Target);
             Text nameText = nameObject.AddComponent<Text>();
@@ -856,7 +854,6 @@ namespace POKModManager
             nameText.horizontalOverflow = HorizontalWrapMode.Overflow;
             (nameText.transform as RectTransform).localPosition = new Vector3(-130, 70, 0);
 
-            // Create input field background
             GameObject background = new GameObject("Background");
             background.transform.SetParent(Target, false);
             Image backgroundImage = background.AddComponent<Image>();
@@ -909,7 +906,7 @@ namespace POKModManager
 
             GameObject dropdownObject = Instantiate(AssetBundleLoader.dropdown);
             dropdownObject.transform.SetParent(Target, false);
-
+            
             GameObject textObject = new GameObject("Dropdown name");
             textObject.transform.SetParent(dropdownObject.transform, false);
             Text textComponent = textObject.AddComponent<Text>();
@@ -929,8 +926,8 @@ namespace POKModManager
                 options.Add(new Dropdown.OptionData(option));
             }
             dropdown.options = options;
-            dropdown.value = DefalutIndex;
-
+            dropdown.value = DefalutIndex; // idk why it isnt setting it but meh
+            
             if (action != null)
             {
                 dropdown.onValueChanged.AddListener(action);
@@ -1028,7 +1025,6 @@ namespace POKModManager
 
                         if (dropdownValue != null)
                         {
-                            // Use dropdownValue here
                             GenerateDropdown(propertyName, x, dropdownValue.SelectedIndex, dropdownValue.Properties.ToArray(), (v) =>
                             {
                                 print(v);
