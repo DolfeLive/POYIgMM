@@ -97,7 +97,7 @@ and then mod properties (param string[])
 
 the description can only go up to 103 characters,
 
-only four data types are currently supported with mod properties - Ints, floats, booleans, strings and UnityEvents.
+The currently supported data types: - Ints, floats, booleans, strings, UnityEvents and Dropdowns.
 
 ```cs
 using POKModManager;
@@ -111,6 +111,7 @@ namespace Mod
             public bool TestBool { get; set; }
             public string TestString { get; set; } = "hello :D";
             public UnityEvent TestButton { get; set; } = new UnityEvent();
+            public POKDropdown dropdown { get; set; } = new POKDropdown { Properties = new List<string> { "val1", "val2", "val3", "val4", "val5" } };
 
             // Example button use case
             public override void Start()
@@ -130,8 +131,7 @@ Ints and floats are required to have the attribute "POKRange", it has 2 paramete
 
 There is also another attribute called "DoNotSave", this will not save the modified values.
 
-This is how you would register the mod properties,
-
+There are 3 ways to register the mod, the legacy way, automatic and Explicit
 ```cs
 using BepInEx;
 using POKModManager;
@@ -143,7 +143,16 @@ namespace Mod
     {
         private void Start()
         {
+            // Legacy
             POKManager.RegisterMod(new TemplateMod(), MOD_NAME, MOD_VERSION, MOD_DESCRIPTION, "TestInt", "TestFloat", "TestBool", "TestButton", "TestString");
+
+            // Automatic
+            POKManager.RegisterMod(new TemplateMod(), MOD_NAME, MOD_VERSION, MOD_DESCRIPTION);
+
+            // Explicit
+            POKManager.RegisterMod(new TemplateMod(), MOD_NAME, MOD_VERSION, MOD_DESCRIPTION, UseEditableAttributeOnly=true);
+            // Note that with explicit all variables that you want the player to be able to change must have [Editable] before it
+            // Example: [Editable] public bool TestBool { get; set; }
         }
     }
 }
