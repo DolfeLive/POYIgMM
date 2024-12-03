@@ -7,7 +7,7 @@ Poky is a simple mod manager for peaks of yore made in bepinex, it allows enabli
 
 Poky is still in development so expect bugs.
 
-![](https://github.com/DolfeLive/Poky-Mod-Manager/blob/main/POKManager.gif))
+![](https://github.com/DolfeLive/Poky-Mod-Manager/blob/main/POKManager.gif)
 
 # Documentation
 
