@@ -95,7 +95,7 @@ mod description (string),
 
 the description can only go up to 103 characters,
 
-The currently supported data types: - Ints, floats, booleans, strings, UnityEvents and Dropdowns.
+The currently supported data types: - Ints, floats, booleans, strings, UnityEvents, Dropdowns and KeyCodes.
 
 ```cs
 using POKModManager;
