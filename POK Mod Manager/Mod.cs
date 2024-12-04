@@ -70,4 +70,14 @@ namespace POKModManager
         public int SelectedIndex { get; set; } = 0; // Default to the first index
 
     }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public class Name : Attribute
+    {
+        public Name(string name)
+        {
+            this.name = name;
+        }
+        public string name;
+    }
 }
