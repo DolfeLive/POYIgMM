@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using System;
+using UnityEngine;
 
 namespace POKModManager
 {
@@ -32,6 +33,9 @@ namespace POKModManager
             if (value == null)
                 return default;
 
+            Debug.Log($"Retrieving value of type {value.GetType()} with value: {value}");
+
+
             if (typeof(T) == typeof(int))
                 return (T)(object)Convert.ToInt32(value);
             if (typeof(T) == typeof(float))
@@ -40,6 +44,26 @@ namespace POKModManager
                 return (T)(object)Convert.ToBoolean(value);
             if (typeof(T) == typeof(string))
                 return (T)(object)value.ToString();
+            if (typeof(T) == typeof(KeyCode))
+            {
+                if (value is long longValue)
+                {
+                    int intValue = (int)longValue;
+
+                    if (Enum.IsDefined(typeof(KeyCode), intValue))
+                    {
+                        return (T)(object)(KeyCode)intValue;
+                    }
+                    else
+                    {
+                        Debug.LogError($"Invalid integer value for KeyCode: {intValue}. It does not correspond to a valid KeyCode.");
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Expected a long for keyCode, but found {value.GetType()}.");
+                }
+            }
 
             return (T)value;
         }
