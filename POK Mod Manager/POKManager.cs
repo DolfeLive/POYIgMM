@@ -9,6 +9,8 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine.Events;
 using POKModManager;
+using Rewired;
+using System.Collections;
 
 namespace POKModManager
 {
@@ -29,16 +31,6 @@ namespace POKModManager
         static GameObject configMenu;
         static GameObject menu;
         static GameObject options;
-
-        public static readonly Type[] CompatibleTypes = new Type[]
-        {
-            typeof(int),
-            typeof(string),
-            typeof(float),
-            typeof(UnityEngine.Events.UnityEvent),
-            typeof(bool),
-            typeof(POKDropdown)
-        };
 
         public static void propTypeReplacement(ref PropertyInfo info, ref Type propertyType, ref POKRange attribute, ref ModClass modClass, ref string property)
         {
@@ -141,6 +133,22 @@ namespace POKModManager
                 else
                 {
                     throw new ArgumentException($"Cannot handle type {propertyType.Name}");
+                }
+            }
+            else if (propertyType == typeof(KeyCode))
+            {
+                if (!PlayerPrefs.HasKey($"{modClass.GetType().Name}_{property}") && !Persistance.HasKey(modClass.GetType().Name, property))
+                {
+                    Persistance.SaveData(modClass.GetType().Name, property, info.GetValue(modClass));
+                }
+                else if (Persistance.HasKey(modClass.GetType().Name, property) && !PlayerPrefs.HasKey($"{modClass.GetType().Name}_{property}"))
+                {
+                    info.SetValue(modClass, Persistance.GetValue<KeyCode>(modClass.GetType().Name, property));
+                }
+                else
+                {
+                    Persistance.SaveData(modClass.GetType().Name, property, PlayerPrefs.GetFloat($"{modClass.GetType().Name}_{property}"));
+                    info.SetValue(modClass, (KeyCode)PlayerPrefs.GetInt($"{modClass.GetType().Name}_{property}"));
                 }
             }
         }
@@ -646,7 +654,7 @@ namespace POKModManager
             Target.transform.parent = configHolder.transform;
 
             GetRowAndColumn(i, out int row, out int column);
-            Target.transform.localPosition = new Vector3(-675 + 325 * row, 300 - 134 * column, 0);
+            Target.transform.localPosition = new Vector3(-675 + 335 * row, 300 - 134 * column, 0);
             Target.transform.localScale = new Vector3(0.7f, 0.7f, 1);
 
             GameObject textObject = new GameObject("Slider Text");
@@ -729,7 +737,8 @@ namespace POKModManager
             Transform Target = new GameObject($"Toggle {Name}").transform;
             Target.transform.parent = configHolder.transform;
             GetRowAndColumn(i, out int row, out int column);
-            Target.transform.localPosition = new Vector3(-675 + 325 * row, 300 - 134 * column, 0);
+            print($"Row: {row}, column: {column}");
+            Target.transform.localPosition = new Vector3(-675 + 345 * row, 300 - 114 * column, 0);
             Target.transform.localScale = new Vector3(0.7f, 0.7f, 1);
 
             GameObject background = new GameObject("Background");
@@ -796,7 +805,7 @@ namespace POKModManager
             Target.transform.parent = configHolder.transform;
 
             GetRowAndColumn(i, out int row, out int column);
-            Target.transform.localPosition = new Vector3(-710 + 325 * row, (300 - 134 * column) - 350, 0);
+            Target.transform.localPosition = new Vector3(-710 + 360 * row, (-115 - 115 * column), 0);
             Target.transform.localScale = new Vector3(0.7f, 0.7f, 1);
 
             GameObject background = new GameObject("Background");
@@ -820,13 +829,10 @@ namespace POKModManager
             textComponent.raycastTarget = true;
             textComponent.alignment = TextAnchor.MiddleCenter;
 
-            // Use Unity's UI Button component correctly
             UnityEngine.UI.Button buttonComponent = background.AddComponent<UnityEngine.UI.Button>();
 
-            // Set the button's graphic to the background image
             buttonComponent.targetGraphic = backgroundImage;
 
-            // Add the action to the button's click event
             if (action != null)
             {
                 buttonComponent.onClick.AddListener(action);
@@ -840,9 +846,9 @@ namespace POKModManager
             Target.transform.parent = configHolder.transform;
 
             GetRowAndColumn(i, out int row, out int column);
-            Target.transform.localPosition = new Vector3(-675 + 325 * row, (300 - 134 * column) - 393, 0);
+            Target.transform.localPosition = new Vector3(-675 + 395 * row, -115 - 115 * column, 0);
             Target.transform.localScale = new Vector3(0.7f, 0.7f, 1);
-
+            // -120 // -93
             GameObject nameObject = new GameObject("Name");
             nameObject.transform.SetParent(Target);
             Text nameText = nameObject.AddComponent<Text>();
@@ -935,6 +941,78 @@ namespace POKModManager
 
         }
 
+        static void GenerateKeycodeButton(string Name, int i, string defaultKeycode, out Text SelectedKeycode, UnityAction action = null)
+        {
+            Transform configHolder = configMenu.transform.Find("holder");
+            Transform Target = new GameObject($"Keycode {Name}").transform;
+            Target.transform.parent = configHolder.transform;
+
+            GetRowAndColumn(i, out int row, out int column);
+            Target.transform.localPosition = new Vector3(-710 + 425 * row, (-115 - 115 * column), 0);
+            Target.transform.localScale = new Vector3(0.7f, 0.7f, 1);
+
+            GameObject background = new GameObject("Background");
+            background.transform.SetParent(Target, false);
+
+            Image backgroundImage = background.AddComponent<Image>();
+            backgroundImage.color = Color.gray;
+
+            RectTransform backgroundRectTransform = background.GetComponent<RectTransform>();
+            backgroundRectTransform.sizeDelta = new Vector2(300, 50);
+
+            GameObject KeycodeName = new GameObject("Keycode name");
+            KeycodeName.transform.SetParent(background.transform, false);
+            Text textComponent = KeycodeName.AddComponent<Text>();
+            textComponent.text = Name;
+            textComponent.color = Color.white;
+            textComponent.fontSize = 40;
+            textComponent.font = peaksOfYoreFont;
+            textComponent.alignment = TextAnchor.MiddleLeft;
+            RectTransform textRect = KeycodeName.GetComponent<RectTransform>();
+            textRect.localPosition = new Vector2(-67.1704f, 68.1265f);
+            textRect.localScale = new Vector3(1.6f, 1.6f, 0f);
+
+            GameObject textObject = new GameObject("Keycode Text");
+            textObject.transform.SetParent(background.transform, false);
+
+            SelectedKeycode = textObject.AddComponent<Text>();
+            SelectedKeycode.text = defaultKeycode;
+            SelectedKeycode.color = Color.white;
+            SelectedKeycode.fontSize = 30;
+            SelectedKeycode.font = peaksOfYoreFont;
+            SelectedKeycode.horizontalOverflow = HorizontalWrapMode.Overflow;
+            SelectedKeycode.raycastTarget = true;
+            SelectedKeycode.alignment = TextAnchor.MiddleCenter;
+
+            UnityEngine.UI.Button buttonComponent = background.AddComponent<UnityEngine.UI.Button>();
+
+            buttonComponent.targetGraphic = backgroundImage;
+
+            if (action != null)
+            {
+                buttonComponent.onClick.AddListener(action);
+            }
+        }
+
+        private static IEnumerator WaitForKeycodeInput(System.Action<KeyCode> onKeyDetected)
+        {
+            Debug.Log("Waiting for key press...");
+            while (!Input.anyKeyDown)
+            {
+                yield return null;
+            }
+
+            foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
+            {
+                if (Input.GetKeyDown(key))
+                {
+                    Debug.Log($"Key detected: {key}");
+                    onKeyDetected?.Invoke(key);
+                    yield break;
+                }
+            }
+        }
+
         static void SetupConfig(int i)
         {
             Mod Mod = mods[i];
@@ -947,13 +1025,15 @@ namespace POKModManager
 
                 POKRange Rangeattribute = info.GetCustomAttribute(typeof(POKRange)) as POKRange;
                 DoNotSave DoNotSaveAttribute = info.GetCustomAttribute(typeof(DoNotSave)) as DoNotSave;
+                Name attributeName = info.GetCustomAttribute(typeof(Name)) as Name;
+
 
                 Type propertyType = info.PropertyType;
 
                 switch (propertyType)
                 {
                     case Type _ when propertyType == typeof(Int32):
-                        GenerateSlider(propertyName, true, Rangeattribute.min, Rangeattribute.max, x, (int)info.GetValue(Mod.ModClass), (v) => { 
+                        GenerateSlider(attributeName != null ? attributeName.name : propertyName, true, Rangeattribute.min, Rangeattribute.max, x, (int)info.GetValue(Mod.ModClass), (v) => { 
                             info.SetValue(Mod.ModClass, (int)v); 
                             if (DoNotSaveAttribute == null) 
                             {
@@ -963,7 +1043,7 @@ namespace POKModManager
                         });
                         break;
                     case Type _ when propertyType == typeof(Single):
-                        GenerateSlider(propertyName, false, Rangeattribute.min, Rangeattribute.max, x, (float)info.GetValue(Mod.ModClass), (v) => {
+                        GenerateSlider(attributeName != null ? attributeName.name : propertyName, false, Rangeattribute.min, Rangeattribute.max, x, (float)info.GetValue(Mod.ModClass), (v) => {
 
                             info.SetValue(Mod.ModClass, v);
                             if (DoNotSaveAttribute == null)
@@ -975,7 +1055,7 @@ namespace POKModManager
                         });
                         break;
                     case Type _ when propertyType == typeof(Boolean):
-                        GenerateToggle(propertyName, x, (bool)info.GetValue(Mod.ModClass), (v) => {
+                        GenerateToggle(attributeName != null ? attributeName.name : propertyName, x, (bool)info.GetValue(Mod.ModClass), (v) => {
                             info.SetValue(Mod.ModClass, v); 
                             if (DoNotSaveAttribute == null)
                             {
@@ -986,7 +1066,7 @@ namespace POKModManager
                         });
                         break;
                     case Type _ when propertyType == typeof(UnityEvent):
-                        GenerateModButton(propertyName, x, () => {
+                        GenerateModButton(attributeName != null ? attributeName.name : propertyName, x, () => {
                             try
                             {
                                 GameObject.Find("Click").GetComponent<AudioSource>().Play();
@@ -1009,7 +1089,7 @@ namespace POKModManager
                         });
                         break;
                     case Type _ when propertyType == typeof(string):
-                        GenerateString(propertyName, x, (string)info.GetValue(Mod.ModClass), (v) =>
+                        GenerateString(attributeName != null ? attributeName.name : propertyName, x, (string)info.GetValue(Mod.ModClass), (v) =>
                         {
                             info.SetValue(Mod.ModClass, v);
                             if (DoNotSaveAttribute == null)
@@ -1025,7 +1105,7 @@ namespace POKModManager
 
                         if (dropdownValue != null)
                         {
-                            GenerateDropdown(propertyName, x, dropdownValue.SelectedIndex, dropdownValue.Properties.ToArray(), (v) =>
+                            GenerateDropdown(attributeName != null ? attributeName.name : propertyName, x, dropdownValue.SelectedIndex, dropdownValue.Properties.ToArray(), (v) =>
                             {
                                 print(v);
                                 dropdownValue.SelectedIndex = v;
@@ -1041,14 +1121,31 @@ namespace POKModManager
                             Debug.LogError($"Property {propertyName} is not of type POKDropdown.");
                         }
                         break;
+                    case Type _ when propertyType == typeof(KeyCode):
+                        Text text = null;
+                        GenerateKeycodeButton(attributeName != null ? attributeName.name : propertyName, x, info.GetValue(Mod.ModClass).ToString(), out text, () => {
+                            GameObject.Find("Click").GetComponent<AudioSource>().Play();
+
+                            instance.StartCoroutine(WaitForKeycodeInput(value =>
+                            {
+                                text.text = value.ToString();
+                                info.SetValue(Mod.ModClass, value);
+                                if (DoNotSaveAttribute == null)
+                                {
+                                    Persistance.SaveData(Mod.ModClass.GetType().Name, propertyName, value);
+                                }
+                            }));
+                        });
+                        break;
+
                 }
             }
         }
 
         static void GetRowAndColumn(int i, out int row, out int column)
         {
-            column = i % 5;
-            row = i != 0 ? i / 5 : 0;
+            column = i % 8;
+            row = i != 0 ? i / 8 : 0;
         }
 
         static void GenerateButton(int i, int column, int row)
