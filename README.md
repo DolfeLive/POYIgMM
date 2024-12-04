@@ -110,6 +110,7 @@ namespace Mod
             public string TestString { get; set; } = "hello :D";
             public UnityEvent TestButton { get; set; } = new UnityEvent();
             public POKDropdown dropdown { get; set; } = new POKDropdown { Properties = new List<string> { "val1", "val2", "val3", "val4", "val5" } };
+            [Name("Input")] [Editable] public KeyCode keyCode { get; set; } = KeyCode.K;
 
             // Example button use case
             public override void Start()
