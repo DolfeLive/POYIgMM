@@ -1,25 +1,28 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.34114.132
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "POK Mod Manager", "POK Mod Manager\POK Mod Manager.csproj", "{19AA0841-E324-4022-964D-B8502989E373}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "POK Mod Manager", "POK Mod Manager/POK Mod Manager.csproj", "{5103C74E-1C4A-4904-A841-436E54B3AC21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{19AA0841-E324-4022-964D-B8502989E373}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{19AA0841-E324-4022-964D-B8502989E373}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{19AA0841-E324-4022-964D-B8502989E373}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{19AA0841-E324-4022-964D-B8502989E373}.Release|Any CPU.Build.0 = Release|Any CPU
+		Debug-BepInEx|Any CPU = Debug-BepInEx|Any CPU
+		Debug-MelonLoader|Any CPU = Debug-MelonLoader|Any CPU
+		Release-BepInEx|Any CPU = Release-BepInEx|Any CPU
+		Release-MelonLoader|Any CPU = Release-MelonLoader|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {3EF5030F-2A61-45F1-A85F-4CDB6B4D8508}
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5103C74E-1C4A-4904-A841-436E54B3AC21}.Debug-BepInEx|Any CPU.ActiveCfg = Debug-BepInEx|Any CPU
+		{5103C74E-1C4A-4904-A841-436E54B3AC21}.Debug-BepInEx|Any CPU.Build.0 = Debug-BepInEx|Any CPU
+		{5103C74E-1C4A-4904-A841-436E54B3AC21}.Release-BepInEx|Any CPU.ActiveCfg = Release-BepInEx|Any CPU
+		{5103C74E-1C4A-4904-A841-436E54B3AC21}.Release-BepInEx|Any CPU.Build.0 = Release-BepInEx|Any CPU
+		{5103C74E-1C4A-4904-A841-436E54B3AC21}.Debug-MelonLoader|Any CPU.ActiveCfg = Debug-MelonLoader|Any CPU
+		{5103C74E-1C4A-4904-A841-436E54B3AC21}.Debug-MelonLoader|Any CPU.Build.0 = Debug-MelonLoader|Any CPU
+		{5103C74E-1C4A-4904-A841-436E54B3AC21}.Release-MelonLoader|Any CPU.ActiveCfg = Release-MelonLoader|Any CPU
+		{5103C74E-1C4A-4904-A841-436E54B3AC21}.Release-MelonLoader|Any CPU.Build.0 = Release-MelonLoader|Any CPU
 	EndGlobalSection
 EndGlobal
