@@ -1,6 +1,4 @@
-using UnityEngine;
-using BepInEx;
-using BepInEx.Logging;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -12,19 +10,41 @@ using POKModManager;
 using Rewired;
 using System.Collections;
 
+#if BEPINEX
+using BepInEx;
+using BepInEx.Logging;
+
+#elif MELONLOADER
+using MelonLoader;
+
+[assembly: MelonInfo(typeof(POKModManager.POKManager), "POKY Mod Manager DUAL", "1.0.1", "DolfeMods")]
+[assembly: MelonGame("TraipseWare", "Peaks of Yore")]
+#endif
+
 namespace POKModManager
 {
-    /// <summary>
-    /// Basic mod manager for enabling and disabling mods.
-    /// </summary>
+
+/// <summary>
+/// Basic mod manager for enabling and disabling mods.
+/// </summary>
+
+#if BEPINEX
     [BepInPlugin("Data.POKManager", "POK Manager", "1.0.1")]
     public class POKManager : BaseUnityPlugin
+#elif MELONLOADER
+    public class POKManager : MelonMod
+#endif
     {
         public static POKManager instance;
 
         public static AssetBundleLoader ABL;
 
+#if BEPINEX
         public static ManualLogSource ls;
+#elif MELONLOADER
+        public static MelonLogger.Instance ls;
+#endif
+
         public static List<Mod> mods;
         static Font peaksOfYoreFont;
         static GameObject modMenu;
@@ -158,7 +178,7 @@ namespace POKModManager
         /// </summary>
         public static void RegisterMod(ModClass Mod, string ModName, string Version, string Description)
         {
-            if (FindObjectOfType<POKManager>() != null)
+            if (instance != null)
             {
                 PropertyInfo[] Properties = Mod.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
@@ -187,11 +207,6 @@ namespace POKModManager
                     mods = new List<Mod>();
                 }
 
-                if (ls == null)
-                {
-                    ls = BepInEx.Logging.Logger.CreateLogSource("Data.POKManager");
-                }
-
                 if (mod.ModClass == null)
                 {
                     throw new NullReferenceException("mod is null!");
@@ -201,8 +216,11 @@ namespace POKModManager
                 {
                     throw new ArgumentOutOfRangeException("mod already exists!");
                 }
-
+#if BEPINEX
                 ls.LogInfo($"Registering mod {mod.Name}");
+#elif MELONLOADER
+                ls.Msg($"Registering mod {mod.Name}");
+#endif
 
                 if (!Persistance.HasKey(mod.ModClass.GetType().Name, "Enabled"))
                 {
@@ -259,7 +277,7 @@ namespace POKModManager
                 return;
             }
 
-            if (FindObjectOfType<POKManager>() != null)
+            if (instance != null)
             {
                 PropertyInfo[] Properties = Mod.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 Properties = Properties.Where(p => p.GetCustomAttribute(typeof(Editable)) != null).ToArray();
@@ -290,11 +308,6 @@ namespace POKModManager
                     mods = new List<Mod>();
                 }
 
-                if (ls == null)
-                {
-                    ls = BepInEx.Logging.Logger.CreateLogSource("Data.POKManager");
-                }
-
                 if (mod.ModClass == null)
                 {
                     throw new NullReferenceException("mod is null!");
@@ -305,7 +318,11 @@ namespace POKModManager
                     throw new ArgumentOutOfRangeException("mod already exists!");
                 }
 
+#if BEPINEX
                 ls.LogInfo($"Registering mod {mod.Name}");
+#elif MELONLOADER
+                ls.Msg($"Registering mod {mod.Name}");
+#endif
 
                 if (!Persistance.HasKey(mod.ModClass.GetType().Name, "Enabled"))
                 {
@@ -340,7 +357,7 @@ namespace POKModManager
         /// </summary>
         public static void RegisterMod(ModClass Mod, string ModName, string Version, string Description, params string[] properties)
         {
-            if (FindObjectOfType<POKManager>() != null)
+            if (instance != null)
             {
                 if (properties.Length != 0)
                 {
@@ -369,11 +386,6 @@ namespace POKModManager
                     mods = new List<Mod>();
                 }
 
-                if (ls == null)
-                {
-                    ls = BepInEx.Logging.Logger.CreateLogSource("Data.POKManager");
-                }
-
                 if (mod.ModClass == null)
                 {
                     throw new NullReferenceException("mod is null!");
@@ -384,7 +396,11 @@ namespace POKModManager
                     throw new ArgumentOutOfRangeException("mod already exists!");
                 }
 
+#if BEPINEX
                 ls.LogInfo($"Registering mod {mod.Name}");
+#elif MELONLOADER
+                ls.Msg($"Registering mod {mod.Name}");
+#endif
 
                 if (!Persistance.HasKey(mod.ModClass.GetType().Name, "Enabled"))
                 {
@@ -463,7 +479,11 @@ namespace POKModManager
             }
         }
 
+#if BEPINEX
         void Awake()
+#elif MELONLOADER
+        public override void OnInitializeMelon()
+#endif
         {
             instance = this;
             
@@ -476,7 +496,11 @@ namespace POKModManager
 
             if (ls == null)
             {
-                ls = BepInEx.Logging.Logger.CreateLogSource("Data.POKManager");
+#if BEPINEX
+                    ls = BepInEx.Logging.Logger.CreateLogSource("Data.POKManager");
+#elif MELONLOADER
+                ls = new MelonLogger.Instance("Data.POKManager");
+#endif
             }
 
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
@@ -534,7 +558,7 @@ namespace POKModManager
                 //Generate Mod Menu
                 GameObject button = GameObject.Find("Options");
 
-                GameObject modButton = Instantiate(button, button.transform.parent);
+                GameObject modButton = UnityEngine.GameObject.Instantiate(button, button.transform.parent);
 
                 modButton.name = "Mods";
 
@@ -546,29 +570,29 @@ namespace POKModManager
                 menu = null;
                 modMenu = null;
 
-                menu = FindObjectOfType<InGameMenu>().menu;
+                menu = UnityEngine.GameObject.FindObjectOfType<InGameMenu>().menu;
 
-                options = FindObjectOfType<InGameMenu>().optionsPg;
+                options = UnityEngine.GameObject.FindObjectOfType<InGameMenu>().optionsPg;
 
-                modMenu = Instantiate(options, options.transform.parent);
+                modMenu = UnityEngine.GameObject.Instantiate(options, options.transform.parent);
 
                 modMenu.name = "Mods_Menu";
 
                 modMenu.SetActive(true);
 
-                Destroy(modMenu.transform.Find("Delete Progress").gameObject);
+                UnityEngine.GameObject.Destroy(modMenu.transform.Find("Delete Progress").gameObject);
 
-                Destroy(modMenu.transform.Find("Defaults").gameObject);
+                UnityEngine.GameObject.Destroy(modMenu.transform.Find("Defaults").gameObject);
 
                 UnityEngine.UI.Button back = modMenu.transform.Find("Back").GetComponent<UnityEngine.UI.Button>();
 
                 Transform modHolder = modMenu.transform.Find("holder");
 
-                Destroy(modHolder.Find("KeybindingsOption").gameObject);
+                UnityEngine.GameObject.Destroy(modHolder.Find("KeybindingsOption").gameObject);
 
-                Destroy(modHolder.Find("GraphicsOption").gameObject);
+                UnityEngine.GameObject.Destroy(modHolder.Find("GraphicsOption").gameObject);
 
-                Destroy(modHolder.Find("mainanchor").gameObject);
+                UnityEngine.GameObject.Destroy(modHolder.Find("mainanchor").gameObject);
 
                 back.onClick.AddListener(() => {
                     options.SetActive(false);
@@ -584,7 +608,7 @@ namespace POKModManager
                     menu.SetActive(false);
                 });
 
-                configMenu = Instantiate(GameObject.Find("Mods_Menu"), options.transform.parent);
+                configMenu = UnityEngine.GameObject.Instantiate(GameObject.Find("Mods_Menu"), options.transform.parent);
 
                 modMenu.SetActive(false);
 
@@ -595,19 +619,19 @@ namespace POKModManager
 
                 configMenu.SetActive(false);
 
-                Destroy(configMenu.transform.Find("Delete Progress").gameObject);
+                UnityEngine.GameObject.Destroy(configMenu.transform.Find("Delete Progress").gameObject);
 
-                Destroy(configMenu.transform.Find("Defaults").gameObject);
+                UnityEngine.GameObject.Destroy(configMenu.transform.Find("Defaults").gameObject);
 
                 UnityEngine.UI.Button backConfig = configMenu.transform.Find("Back").GetComponent<UnityEngine.UI.Button>();
 
                 Transform configHolder = configMenu.transform.Find("holder");
 
-                Destroy(configHolder.Find("KeybindingsOption").gameObject);
+                UnityEngine.GameObject.Destroy(configHolder.Find("KeybindingsOption").gameObject);
 
-                Destroy(configHolder.Find("GraphicsOption").gameObject);
+                UnityEngine.GameObject.Destroy(configHolder.Find("GraphicsOption").gameObject);
 
-                Destroy(configHolder.Find("mainanchor").gameObject);
+                UnityEngine.GameObject.Destroy(configHolder.Find("mainanchor").gameObject);
 
                 backConfig.onClick.AddListener(() => {
                     options.SetActive(false);
@@ -624,11 +648,11 @@ namespace POKModManager
 
                     foreach (Transform child in children)
                     {
-                        Destroy(child.gameObject);
+                        UnityEngine.GameObject.Destroy(child.gameObject);
                     }
                 });
 
-                Destroy(GameObject.Find("ControlMapping_OpenButton"));
+                UnityEngine.GameObject.Destroy(GameObject.Find("ControlMapping_OpenButton"));
 
                 options.SetActive(false);
 
@@ -668,7 +692,7 @@ namespace POKModManager
             textComponent.font = peaksOfYoreFont;
             textComponent.alignment = TextAnchor.MiddleCenter;
 
-            GameObject nameObject = Instantiate(textObject, textObject.transform.parent);
+            GameObject nameObject = UnityEngine.GameObject.Instantiate(textObject, textObject.transform.parent);
             nameObject.GetComponent<Text>().fontSize = 35;
             nameObject.GetComponent<Text>().text = Name;
             nameObject.GetComponent<Text>().name = "Name";
@@ -737,7 +761,7 @@ namespace POKModManager
             Transform Target = new GameObject($"Toggle {Name}").transform;
             Target.transform.parent = configHolder.transform;
             GetRowAndColumn(i, out int row, out int column);
-            print($"Row: {row}, column: {column}");
+
             Target.transform.localPosition = new Vector3(-675 + 345 * row, 300 - 114 * column, 0);
             Target.transform.localScale = new Vector3(0.7f, 0.7f, 1);
 
@@ -778,7 +802,7 @@ namespace POKModManager
             textComponent.alignment = TextAnchor.MiddleCenter;
             (textComponent.transform as RectTransform).localPosition += new Vector3(56, 0);
 
-            GameObject nameObject = Instantiate(textObject, textObject.transform.parent);
+            GameObject nameObject = UnityEngine.GameObject.Instantiate(textObject, textObject.transform.parent);
             nameObject.transform.parent = textObject.transform.parent;
 
             nameObject.GetComponent<Text>().fontSize = 40;
@@ -910,7 +934,7 @@ namespace POKModManager
             Target.transform.localPosition = new Vector3(-735 + 435 * row, (-100 - (134 * column)), 0);
             Target.transform.localScale = new Vector3(1.2f, 1.2f, 1);
 
-            GameObject dropdownObject = Instantiate(AssetBundleLoader.dropdown);
+            GameObject dropdownObject = UnityEngine.GameObject.Instantiate(AssetBundleLoader.dropdown);
             dropdownObject.transform.SetParent(Target, false);
             
             GameObject textObject = new GameObject("Dropdown name");
@@ -1016,7 +1040,7 @@ namespace POKModManager
         static void SetupConfig(int i)
         {
             Mod Mod = mods[i];
-
+            int offset = 0;
             for (int x = 0; x < Mod.Properties.Length; x++)
             {
                 PropertyInfo info = Mod.ModClass.GetType().GetProperty(Mod.Properties[x], BindingFlags.Public | BindingFlags.Instance);
@@ -1027,23 +1051,30 @@ namespace POKModManager
                 DoNotSave DoNotSaveAttribute = info.GetCustomAttribute(typeof(DoNotSave)) as DoNotSave;
                 Name attributeName = info.GetCustomAttribute(typeof(Name)) as Name;
 
+                Visible visibility = info.GetCustomAttribute(typeof(Visible)) as Visible;
+                if (visibility != null && visibility.visible == false)
+                {
+                    offset++;
+                    continue;
+                }
+                int y = x - offset;
 
                 Type propertyType = info.PropertyType;
 
                 switch (propertyType)
                 {
                     case Type _ when propertyType == typeof(Int32):
-                        GenerateSlider(attributeName != null ? attributeName.name : propertyName, true, Rangeattribute.min, Rangeattribute.max, x, (int)info.GetValue(Mod.ModClass), (v) => { 
-                            info.SetValue(Mod.ModClass, (int)v); 
-                            if (DoNotSaveAttribute == null) 
+                        GenerateSlider(attributeName != null ? attributeName.name : propertyName, true, Rangeattribute.min, Rangeattribute.max, y, (int)info.GetValue(Mod.ModClass), (v) => {
+                            info.SetValue(Mod.ModClass, (int)v);
+                            if (DoNotSaveAttribute == null)
                             {
                                 Persistance.SaveData(Mod.ModClass.GetType().Name, propertyName, info.GetValue(Mod.ModClass));
                                 //PlayerPrefs.SetInt($"{Mod.ModClass.GetType().Name}_{propertyName}", (int)info.GetValue(Mod.ModClass));
-                            } 
+                            }
                         });
                         break;
                     case Type _ when propertyType == typeof(Single):
-                        GenerateSlider(attributeName != null ? attributeName.name : propertyName, false, Rangeattribute.min, Rangeattribute.max, x, (float)info.GetValue(Mod.ModClass), (v) => {
+                        GenerateSlider(attributeName != null ? attributeName.name : propertyName, false, Rangeattribute.min, Rangeattribute.max, y, (float)info.GetValue(Mod.ModClass), (v) => {
 
                             info.SetValue(Mod.ModClass, v);
                             if (DoNotSaveAttribute == null)
@@ -1055,8 +1086,8 @@ namespace POKModManager
                         });
                         break;
                     case Type _ when propertyType == typeof(Boolean):
-                        GenerateToggle(attributeName != null ? attributeName.name : propertyName, x, (bool)info.GetValue(Mod.ModClass), (v) => {
-                            info.SetValue(Mod.ModClass, v); 
+                        GenerateToggle(attributeName != null ? attributeName.name : propertyName, y, (bool)info.GetValue(Mod.ModClass), (v) => {
+                            info.SetValue(Mod.ModClass, v);
                             if (DoNotSaveAttribute == null)
                             {
                                 Persistance.SaveData(Mod.ModClass.GetType().Name, propertyName, ((bool)info.GetValue(Mod.ModClass) == true ? 1 : 0));
@@ -1066,13 +1097,13 @@ namespace POKModManager
                         });
                         break;
                     case Type _ when propertyType == typeof(UnityEvent):
-                        GenerateModButton(attributeName != null ? attributeName.name : propertyName, x, () => {
+                        GenerateModButton(attributeName != null ? attributeName.name : propertyName, y, () => {
                             try
                             {
                                 GameObject.Find("Click").GetComponent<AudioSource>().Play();
 
                                 var eventValue = info.GetValue(Mod.ModClass);
-                                
+
                                 if (eventValue is UnityEvent unityEvent)
                                 {
                                     unityEvent.Invoke();
@@ -1089,7 +1120,7 @@ namespace POKModManager
                         });
                         break;
                     case Type _ when propertyType == typeof(string):
-                        GenerateString(attributeName != null ? attributeName.name : propertyName, x, (string)info.GetValue(Mod.ModClass), (v) =>
+                        GenerateString(attributeName != null ? attributeName.name : propertyName, y, (string)info.GetValue(Mod.ModClass), (v) =>
                         {
                             info.SetValue(Mod.ModClass, v);
                             if (DoNotSaveAttribute == null)
@@ -1105,9 +1136,8 @@ namespace POKModManager
 
                         if (dropdownValue != null)
                         {
-                            GenerateDropdown(attributeName != null ? attributeName.name : propertyName, x, dropdownValue.SelectedIndex, dropdownValue.Properties.ToArray(), (v) =>
+                            GenerateDropdown(attributeName != null ? attributeName.name : propertyName, y, dropdownValue.SelectedIndex, dropdownValue.Properties.ToArray(), (v) =>
                             {
-                                print(v);
                                 dropdownValue.SelectedIndex = v;
                                 info.SetValue(Mod.ModClass, dropdownValue);
                                 if (DoNotSaveAttribute == null)
@@ -1123,10 +1153,14 @@ namespace POKModManager
                         break;
                     case Type _ when propertyType == typeof(KeyCode):
                         Text text = null;
-                        GenerateKeycodeButton(attributeName != null ? attributeName.name : propertyName, x, info.GetValue(Mod.ModClass).ToString(), out text, () => {
+                        GenerateKeycodeButton(attributeName != null ? attributeName.name : propertyName, y, info.GetValue(Mod.ModClass).ToString(), out text, () => {
                             GameObject.Find("Click").GetComponent<AudioSource>().Play();
 
+#if BEPINEX
                             instance.StartCoroutine(WaitForKeycodeInput(value =>
+#elif MELONLOADER
+                            MelonCoroutines.Start(WaitForKeycodeInput(value => 
+#endif
                             {
                                 text.text = value.ToString();
                                 info.SetValue(Mod.ModClass, value);
@@ -1159,7 +1193,7 @@ namespace POKModManager
             RectTransform rectTransform = obj.transform as RectTransform;
             rectTransform.sizeDelta = new Vector2(rectTransform.rect.width, rectTransform.rect.height + 50);
 
-            GameObject EnableButton = Instantiate(obj, obj.transform);
+            GameObject EnableButton = UnityEngine.GameObject.Instantiate(obj, obj.transform);
             EnableButton.transform.localPosition = new Vector3(-24, -54, 0);
             EnableButton.transform.localScale = new Vector3(0.45f, 0.3f, 1);
             RectTransform enableRectTransform = EnableButton.transform as RectTransform;
@@ -1168,7 +1202,7 @@ namespace POKModManager
             EnableButton.GetComponent<Image>().color = new Color(0.25f, 0.25f, 0.25f, 0.3f);
             EnableButton.AddComponent<UnityEngine.UI.Button>();
 
-            GameObject DisableButton = Instantiate(EnableButton, obj.transform);
+            GameObject DisableButton = UnityEngine.GameObject.Instantiate(EnableButton, obj.transform);
             DisableButton.name = "Disable button";
             DisableButton.transform.localPosition = new Vector3(24, -54, 0);
             DisableButton.transform.localScale = new Vector3(0.45f, 0.3f, 1);
@@ -1177,7 +1211,7 @@ namespace POKModManager
 
             if (mods[i].Properties.Length != 0)
             {
-                ConfigButton = Instantiate(EnableButton, obj.transform);
+                ConfigButton = UnityEngine.GameObject.Instantiate(EnableButton, obj.transform);
                 ConfigButton.name = "Config";
                 ConfigButton.transform.localPosition = new Vector3(24f, 32f, 0);
                 ConfigButton.transform.localScale = new Vector3(0.45f, 0.3f, 1);
@@ -1204,17 +1238,17 @@ namespace POKModManager
             nameText.raycastTarget = false;
             nameText.maskable = false;
 
-            GameObject Status = Instantiate(nameobj, obj.transform);
+            GameObject Status = UnityEngine.GameObject.Instantiate(nameobj, obj.transform);
             Status.name = "Status";
             Status.transform.localPosition = new Vector3(-24, -2, 0);
             Status.GetComponent<Text>().text = "Unknown";
 
-            GameObject Version = Instantiate(nameobj, obj.transform);
+            GameObject Version = UnityEngine.GameObject.Instantiate(nameobj, obj.transform);
             Version.name = "Version";
             Version.transform.localPosition = new Vector3(-24, -20, 0);
             Version.GetComponent<Text>().text = "V" + mods[i].Version;
 
-            GameObject Description = Instantiate(nameobj, obj.transform);
+            GameObject Description = UnityEngine.GameObject.Instantiate(nameobj, obj.transform);
             Description.name = "Description";
             Description.transform.localPosition = new Vector3(-0.2f, -15f, 0);
             string description = mods[i].Description;
@@ -1231,7 +1265,7 @@ namespace POKModManager
             Description.GetComponent<Text>().fontSize = 18;
             descriptionTransform.sizeDelta = new Vector2(210, 50);
 
-            GameObject EnableText = Instantiate(nameobj, EnableButton.transform);
+            GameObject EnableText = UnityEngine.GameObject.Instantiate(nameobj, EnableButton.transform);
             EnableText.GetComponent<Text>().fontSize = 30;
             EnableText.GetComponent<Text>().text = "Enable";
             EnableText.transform.localPosition = new Vector3(10, -97, 0);
@@ -1239,14 +1273,14 @@ namespace POKModManager
 
             if (mods[i].Properties.Length != 0)
             {
-                GameObject ConfigText = Instantiate(nameobj, ConfigButton.transform);
+                GameObject ConfigText = UnityEngine.GameObject.Instantiate(nameobj, ConfigButton.transform);
                 ConfigText.GetComponent<Text>().fontSize = 30;
                 ConfigText.GetComponent<Text>().text = "Config";
                 ConfigText.transform.localPosition = new Vector3(10, -97, 0);
                 ConfigText.transform.localScale = new Vector3(0.8f, 2.5f, 1);
             }
 
-            GameObject DisableText = Instantiate(EnableText, DisableButton.transform);
+            GameObject DisableText = UnityEngine.GameObject.Instantiate(EnableText, DisableButton.transform);
             DisableText.GetComponent<Text>().text = "Disable";
             DisableText.transform.localPosition = new Vector3(10, -97, 0);
             DisableText.transform.localScale = new Vector3(0.8f, 2.5f, 1);
@@ -1263,17 +1297,29 @@ namespace POKModManager
 
         public static void printInfo(object obj, string name)
         {
+#if BEPINEX
             ls.LogInfo($"| [{name}] : " + obj);
+#elif MELONLOADER
+            ls.Msg($"| [{name}] : " + obj);
+#endif
         }
 
         public static void printWarning(object obj, string name)
         {
+#if BEPINEX
             ls.LogWarning($"| [{name}] : " + obj);
+#elif MELONLOADER
+            ls.Warning($"| [{name}] : " + obj);
+#endif
         }
 
         public static void printError(object obj, string name)
         {
+#if BEPINEX
             ls.LogError($"| [{name}] : " + obj);
+#elif MELONLOADER
+            ls.Error($"| [{name}] : " + obj);
+#endif
         }
     }
 }

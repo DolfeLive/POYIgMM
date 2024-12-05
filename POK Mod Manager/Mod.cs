@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -79,5 +79,15 @@ namespace POKModManager
             this.name = name;
         }
         public string name;
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public class Visible : Attribute
+    {
+        public Visible(bool visible)
+        {
+            this.visible = visible;
+        }
+        public bool visible;
     }
 }
